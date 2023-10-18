@@ -10,6 +10,7 @@ urlpatterns = [
 
     path('artists/', views.artist_list),
     path('artists/<int:id>/', views.artist_detail),
+    path('create_artists/', views.create_artists),
 
     path('unavailabilities/', views.unavailability_list),
     path('unavailabilities/<int:id>/', views.unavailability_detail),

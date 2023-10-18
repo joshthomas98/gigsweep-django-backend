@@ -57,6 +57,20 @@ def artist_detail(request, id, format=None):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
+@api_view(['POST'])
+def create_artists(request, format=None):
+    """
+    Create multiple Artist objects in one go with a list of JSON data.
+    """
+    if request.method == 'POST':
+        serializer = ArtistSerializer(data=request.data, many=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
 # Unavailability View
 
 @api_view(['GET', 'POST'])
