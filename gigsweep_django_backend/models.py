@@ -5,10 +5,11 @@ from multiselectfield import MultiSelectField
 
 class Artist(models.Model):
     artist_name = models.CharField(max_length=100)
-    email = models.EmailField(max_length=200)
-    password = models.CharField(max_length=128)
+    email = models.EmailField(max_length=100)
+    password = models.CharField(max_length=50)
     phone_number = models.CharField(max_length=20, null=True)
-    bio = models.CharField(max_length=5000, null=True)
+    # Change from CharField to TextField
+    bio = models.TextField(null=True)
     summary = models.CharField(max_length=100, null=True)
     genre = models.CharField(max_length=50, choices=GENRE_CHOICES, null=True)
     country = models.CharField(
@@ -21,9 +22,9 @@ class Artist(models.Model):
     image = models.ImageField(
         upload_to='user_profile_images/artist_profile_images/', null=True, blank=True)
     featured_artist = models.BooleanField(default=False)
-    facebook = models.CharField(max_length=5000, null=True, blank=True)
-    twitter = models.CharField(max_length=5000, null=True, blank=True)
-    youtube = models.CharField(max_length=5000, null=True, blank=True)
+    facebook = models.CharField(max_length=200, null=True, blank=True)
+    twitter = models.CharField(max_length=200, null=True, blank=True)
+    youtube = models.CharField(max_length=200, null=True, blank=True)
     artist_membership_type = models.IntegerField(null=True)
     gigging_distance = MultiSelectField(
         choices=GIGGING_DISTANCE, blank=True, max_length=200)
@@ -37,7 +38,7 @@ class Unavailability(models.Model):
         Artist, on_delete=models.CASCADE, related_name='unavailabilities')
     date = models.DateField()
     status = models.CharField(max_length=50, default="Unavailable", null=True)
-    reason = models.CharField(max_length=300, null=True)
+    reason = models.CharField(max_length=150, null=True)
 
     def __str__(self):
         return f"{self.artist} - {self.date}"
@@ -45,11 +46,13 @@ class Unavailability(models.Model):
 
 class Venue(models.Model):
     venue_name = models.CharField(max_length=100)
-    email = models.EmailField(max_length=200)
-    password = models.CharField(max_length=128)
+    email = models.EmailField(max_length=100)
+    password = models.CharField(max_length=50)
     phone_number = models.CharField(max_length=20, null=True)
-    address = models.CharField(max_length=1000, null=True)
-    bio = models.CharField(max_length=5000, null=True)
+    # Change from CharField to TextField
+    address = models.TextField(null=True)
+    # Change from CharField to TextField
+    bio = models.TextField(null=True)
     country = models.CharField(
         max_length=50, choices=UK_COUNTRY_CHOICES, null=True)
     county = models.CharField(
@@ -59,9 +62,9 @@ class Venue(models.Model):
     type_of_act = models.CharField(
         max_length=100, choices=ACT_TYPES, null=True)
     user_type = models.CharField(max_length=50, choices=USER_TYPES, null=True)
-    facebook = models.CharField(max_length=5000, null=True, blank=True)
-    twitter = models.CharField(max_length=5000, null=True, blank=True)
-    youtube = models.CharField(max_length=5000, null=True, blank=True)
+    facebook = models.CharField(max_length=200, null=True, blank=True)
+    twitter = models.CharField(max_length=200, null=True, blank=True)
+    youtube = models.CharField(max_length=200, null=True, blank=True)
     venue_membership_type = models.IntegerField(null=True)
 
     def __str__(self):
@@ -83,6 +86,8 @@ class ArtistListedGig(models.Model):
     payment = models.IntegerField(null=True)
     user_type = models.CharField(max_length=50, choices=USER_TYPES, null=True)
     num_applications = models.PositiveIntegerField(default=0)
+    # Change from CharField to TextField
+    description = models.TextField(null=True)
 
     def update_num_applications(self):
         self.num_applications = self.artists.count()
@@ -108,6 +113,8 @@ class VenueListedGig(models.Model):
     user_type = models.CharField(
         max_length=50, choices=USER_TYPES, null=True)
     num_applications = models.PositiveIntegerField(default=0)
+    # Change from CharField to TextField
+    description = models.TextField(null=True)
 
     def increment_num_applications(self):
         self.num_applications += 1
@@ -135,7 +142,7 @@ class MembershipOptions(models.Model):
     type_of_user = models.CharField(
         max_length=50, choices=USER_TYPES, null=True)
     title = models.CharField(max_length=100)
-    description = models.TextField(max_length=5000, null=True)
+    description = models.TextField(null=True)
     price = models.CharField(max_length=50, null=True)
     disclosure = models.CharField(max_length=500, null=True)
     is_active = models.BooleanField(default=True)
@@ -148,7 +155,9 @@ class ArtistWrittenReview(models.Model):
     date_of_performance = models.DateField(null=True)
     artist_name = models.CharField(max_length=100, null=True)
     venue_name = models.CharField(max_length=100, null=True)
-    review = models.TextField(max_length=10000, null=True)
+
+    # Change from CharField to TextField
+    review = models.TextField(null=True)
     rating = models.IntegerField(null=True)
     is_approved = models.CharField(
         choices=IS_APPROVED_CHOICES, default='Under review', max_length=100, null=True)
@@ -161,7 +170,9 @@ class VenueWrittenReview(models.Model):
     date_of_performance = models.DateField(null=True)
     venue_name = models.CharField(max_length=100, null=True)
     artist_name = models.CharField(max_length=100, null=True)
-    review = models.TextField(max_length=10000, null=True)
+
+    # Change from CharField to TextField
+    review = models.TextField(null=True)
     rating = models.IntegerField(null=True)
     is_approved = models.CharField(
         choices=IS_APPROVED_CHOICES, default='Under review', max_length=100, null=True)
