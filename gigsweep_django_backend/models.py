@@ -4,7 +4,7 @@ from multiselectfield import MultiSelectField
 
 
 class Artist(models.Model):
-    artist_name = models.CharField(max_length=100)
+    artist_name = models.CharField(max_length=200)
     email = models.EmailField(max_length=100)
     password = models.CharField(max_length=50)
     phone_number = models.CharField(max_length=20, null=True)
