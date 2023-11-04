@@ -11,7 +11,11 @@ https://docs.djangoproject.com/en/4.0/ref/settings/
 """
 
 from pathlib import Path
+from dotenv import load_dotenv
 import os
+
+# Load environment variables from the .env file
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -21,12 +25,22 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure--i$udv*(n(3jq3feij+9sa0a&-jd^54nu%cq3m))+bp)cdr=!!'
+SECRET_KEY = os.getenv('SECRET_KEY')
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+# Read the environment setting
+ENVIRONMENT = os.getenv('ENVIRONMENT')
 
-ALLOWED_HOSTS = ["*"]
+# DEBUG setting
+if ENVIRONMENT == 'development':
+    DEBUG = True
+else:
+    DEBUG = False
+
+# ALLOWED_HOSTS setting
+if ENVIRONMENT == 'development':
+    ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+else:
+    ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS').split(',')
 
 
 # Application definition
@@ -98,14 +112,25 @@ WSGI_APPLICATION = 'gigsweep_django_backend.wsgi.application'
 #     }
 # }
 
+# DATABASES_LOCAL= {
+#     'default': {
+#         'ENGINE': 'django.db.backends.mysql',
+#         'NAME': 'gigsweep_schema',
+#         'USER': 'joshthomas',
+#         'PASSWORD': 'Sl@sh2406',
+#         'HOST': 'localhost',  # or the MySQL server's IP address
+#         'PORT': '3306',       # the default MySQL port
+#     }
+# }
+
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'gigsweep_schema',
-        'USER': 'joshthomas',
-        'PASSWORD': 'Sl@sh2406',
-        'HOST': 'localhost',  # or the MySQL server's IP address
-        'PORT': '3306',       # the default MySQL port
+        'ENGINE': os.getenv('DB_ENGINE'),
+        'NAME': os.getenv('DB_NAME'),
+        'USER': os.getenv('DB_USER'),
+        'PASSWORD': os.getenv('DB_PASSWORD'),
+        'HOST': os.getenv('DB_HOST'),
+        'PORT': os.getenv('DB_PORT'),
     }
 }
 
