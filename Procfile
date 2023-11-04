@@ -1,1 +1,0 @@
-web: gunicorn gigsweep_django_backend.wsgi --log-file -
