@@ -12,7 +12,6 @@ https://docs.djangoproject.com/en/4.0/ref/settings/
 
 from pathlib import Path
 import os
-from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -21,17 +20,15 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.0/howto/deployment/checklist/
 
-# Load environment variables from the .env file
-load_dotenv()
-
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv('SECRET_KEY')
+SECRET_KEY = 'django-insecure--i$udv*(n(3jq3feij+9sa0a&-jd^54nu%cq3m))+bp)cdr=!!'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv('DEV_DEBUG') == 'True'  # Convert the string to a boolean
+DEBUG = False
 
-ALLOWED_HOSTS = os.getenv('DEV_ALLOWED_HOSTS').split(',') if os.getenv(
-    'DEV_ENVIRONMENT') == 'development' else os.getenv('PROD_ALLOWED_HOSTS').split(',')
+# ALLOWED_HOSTS = ["*"]
+ALLOWED_HOSTS = [
+    'ec2-3-8-93-211.eu-west-2.compute.amazonaws.com', '3.8.93.211', 'localhost']
 
 
 # Application definition
@@ -116,12 +113,13 @@ WSGI_APPLICATION = 'gigsweep_django_backend.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': os.getenv('DB_ENGINE'),
-        'NAME': os.getenv('DB_NAME'),
-        'USER': os.getenv('DB_USER'),
-        'PASSWORD': os.getenv('DB_PASSWORD'),
-        'HOST': os.getenv('DB_HOST'),
-        'PORT': os.getenv('DB_PORT'),
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'gigsweep_schema',
+        'USER': 'admin',
+        'PASSWORD': 'Slash2406',
+        # or the MySQL server's IP address
+        'HOST': 'gigsweepdb.cuuwta3esqvt.eu-west-2.rds.amazonaws.com',
+        'PORT': '3306',       # the default MySQL port
     }
 }
 
