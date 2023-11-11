@@ -24,11 +24,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure--i$udv*(n(3jq3feij+9sa0a&-jd^54nu%cq3m))+bp)cdr=!!'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
-# ALLOWED_HOSTS = ["*"]
-ALLOWED_HOSTS = [
-    'ec2-3-8-93-211.eu-west-2.compute.amazonaws.com', '3.8.93.211', 'localhost']
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -59,9 +57,9 @@ MIDDLEWARE = [
 
 CORS_ALLOW_ALL_ORIGINS = True
 
-CSRF_TRUSTED_ORIGINS = [
-    'https://web-production-4516.up.railway.app',
-]
+# CSRF_TRUSTED_ORIGINS = [
+#     'https://web-production-4516.up.railway.app',
+# ]
 
 # Will switch to this later so that it is more secure
 
@@ -166,7 +164,8 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static'),
 ]
 
-MEDIA_ROOT = '/Users/joshthomas/Documents/gigsweep_django_backend/gigsweep_django_backend/'
+# MEDIA_ROOT = '/Users/joshthomas/Documents/gigsweep_django_backend/gigsweep_django_backend/'
+MEDIA_ROOT = 'https://gigsweepimages.s3.eu-west-2.amazonaws.com/artist_profile_images/'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field
