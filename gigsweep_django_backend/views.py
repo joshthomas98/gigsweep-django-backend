@@ -5,7 +5,7 @@ from django.shortcuts import get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from rest_framework import status
+from rest_framework import status, generics
 from .models import Artist, Unavailability, Venue, ArtistListedGig, VenueListedGig, NewsletterSignup, MembershipOptions, ArtistWrittenReview, VenueWrittenReview, ArtistGigApplication, VenueGigApplication
 from .serializers import ArtistSerializer, UnavailabilitySerializer, VenueSerializer, ArtistListedGigCreateSerializer, ArtistListedGigEditSerializer, VenueListedGigCreateSerializer, VenueListedGigEditSerializer, NewsletterSignupSerializer, MembershipOptionsSerializer, ArtistWrittenReviewSerializer, VenueWrittenReviewSerializer, ArtistGigApplicationSerializer, VenueGigApplicationSerializer
 from django.db.models import Q
@@ -169,12 +169,17 @@ def venue_detail(request, id, format=None):
 
 @api_view(['POST'])
 def artist_sign_in(request):
-    email = request.data.get('email')
+    # Convert entered email to lowercase
+    email = request.data.get('email').lower()
     password = request.data.get('password')
 
-    artist = get_object_or_404(Artist, email=email, password=password)
-    serializer = ArtistSerializer(artist)
+    try:
+        # Case-insensitive email comparison
+        artist = Artist.objects.get(email__iexact=email, password=password)
+    except Artist.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
 
+    serializer = ArtistSerializer(artist)
     return Response({'id': artist.id})
 
 
@@ -182,12 +187,17 @@ def artist_sign_in(request):
 
 @api_view(['POST'])
 def venue_sign_in(request):
-    email = request.data.get('email')
+    # Convert entered email to lowercase
+    email = request.data.get('email').lower()
     password = request.data.get('password')
 
-    venue = get_object_or_404(Venue, email=email, password=password)
-    serializer = VenueSerializer(venue)
+    try:
+        # Case-insensitive email comparison
+        venue = Venue.objects.get(email__iexact=email, password=password)
+    except Venue.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
 
+    serializer = VenueSerializer(venue)
     return Response({'id': venue.id})
 
 
@@ -790,3 +800,43 @@ def venue_gig_application_detail(request, id, format=None):
     elif request.method == 'DELETE':
         venue_gig_application.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+# class SendMessageView(generics.CreateAPIView):
+#     serializer_class = ChatMessageSerializer
+
+#     def perform_create(self, serializer):
+#         # Set the sender and receiver based on your logic
+#         sender_id = self.request.data.get('sender_object_id')
+#         receiver_id = self.request.data.get('receiver_object_id')
+
+#         sender_content_type = self.request.data.get('sender_content_type')
+#         receiver_content_type = self.request.data.get('receiver_content_type')
+
+#         sender = self.get_object(sender_id, sender_content_type)
+#         receiver = self.get_object(receiver_id, receiver_content_type)
+
+#         serializer.save(sender=sender, receiver=receiver)
+
+#     def get_object(self, object_id, content_type):
+#         model_class = None
+#         if content_type == 'artist':
+#             model_class = Artist
+#         elif content_type == 'venue':
+#             model_class = Venue
+
+#         if model_class:
+#             return model_class.objects.get(id=object_id)
+#         return None
+
+
+# class ChatMessageListView(generics.ListAPIView):
+#     serializer_class = ChatMessageSerializer
+
+#     def get_queryset(self):
+#         # Set the user (sender or receiver) based on your authentication logic
+#         user_id = self.request.user.id
+
+#         queryset = ChatMessage.objects.filter(
+#             sender_object_id=user_id) | ChatMessage.objects.filter(receiver_object_id=user_id)
+#         return queryset

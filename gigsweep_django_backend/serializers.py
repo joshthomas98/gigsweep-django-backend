@@ -11,7 +11,7 @@ class ArtistSerializer(serializers.ModelSerializer):
     class Meta:
         model = Artist
         fields = ['id', 'artist_name', 'email', 'password', 'phone_number', 'bio', 'summary', 'genre',
-                  'country', 'county', 'type_of_artist', 'user_type', 'image', 'featured_artist', 'facebook', 'twitter', 'youtube', 'artist_membership_type', 'gigging_distance']
+                  'country', 'county', 'type_of_artist', 'user_type', 'image', 'featured_artist', 'facebook', 'twitter', 'youtube', 'artist_membership_type', 'upcoming_gigs', 'gigging_distance']
 
 
 class UnavailabilitySerializer(serializers.ModelSerializer):
@@ -113,3 +113,30 @@ class VenueGigApplicationSerializer(serializers.ModelSerializer):
     class Meta:
         model = VenueGigApplication
         fields = ['id', 'artist', 'venue_gig']
+
+
+# class ChatMessageSerializer(serializers.ModelSerializer):
+#     sender_profile = serializers.SerializerMethodField()
+#     receiver_profile = serializers.SerializerMethodField()
+
+#     class Meta:
+#         model = ChatMessage
+#         fields = ['id', 'sender_content_type', 'sender_object_id', 'sender_profile',
+#                   'receiver_content_type', 'receiver_object_id', 'receiver_profile',
+#                   'message', 'is_read', 'date']
+
+#     def get_sender_profile(self, obj):
+#         if obj.sender_content_type.model == 'artist':
+#             artist = Artist.objects.get(id=obj.sender_object_id)
+#             return ArtistSerializer(artist).data
+#         elif obj.sender_content_type.model == 'venue':
+#             venue = Venue.objects.get(id=obj.sender_object_id)
+#             return VenueSerializer(venue).data
+
+#     def get_receiver_profile(self, obj):
+#         if obj.receiver_content_type.model == 'artist':
+#             artist = Artist.objects.get(id=obj.receiver_object_id)
+#             return ArtistSerializer(artist).data
+#         elif obj.receiver_content_type.model == 'venue':
+#             venue = Venue.objects.get(id=obj.receiver_object_id)
+#             return VenueSerializer(venue).data

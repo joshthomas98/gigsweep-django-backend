@@ -1,9 +1,12 @@
 from django.db import models
 from .choices import GENRE_CHOICES, UK_COUNTRY_CHOICES, UK_COUNTY_CHOICES, ACT_TYPES, ARTIST_TYPES, GIGGING_DISTANCE, USER_TYPES, IS_APPROVED_CHOICES
 from multiselectfield import MultiSelectField
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
 
 
 class Artist(models.Model):
+
     artist_name = models.CharField(max_length=200)
     email = models.EmailField(max_length=100)
     password = models.CharField(max_length=50)
@@ -26,6 +29,7 @@ class Artist(models.Model):
     twitter = models.CharField(max_length=200, null=True, blank=True)
     youtube = models.CharField(max_length=200, null=True, blank=True)
     artist_membership_type = models.IntegerField(null=True)
+    upcoming_gigs = models.JSONField(blank=True, null=True)
     gigging_distance = MultiSelectField(
         choices=GIGGING_DISTANCE, blank=True, max_length=200)
 
@@ -219,3 +223,40 @@ class VenueGigApplication(models.Model):
 
     def __str__(self):
         return f"{self.artist} applied for {self.venue_gig}"
+
+
+# class ChatMessage(models.Model):
+#     sender_content_type = models.ForeignKey(
+#         ContentType, on_delete=models.CASCADE, related_name='sender_messages')
+#     sender_object_id = models.PositiveIntegerField()
+#     sender = GenericForeignKey('sender_content_type', 'sender_object_id')
+
+#     receiver_content_type = models.ForeignKey(
+#         ContentType, on_delete=models.CASCADE, related_name='receiver_messages')
+#     receiver_object_id = models.PositiveIntegerField()
+#     receiver = GenericForeignKey('receiver_content_type', 'receiver_object_id')
+
+#     message = models.CharField(max_length=10000000000)
+#     is_read = models.BooleanField(default=False)
+#     date = models.DateTimeField(auto_now_add=True)
+
+#     class Meta:
+#         ordering = ['date']
+#         verbose_name_plural = "Messages"
+
+#     def __str__(self):
+#         return f"{self.sender} - {self.receiver}"
+
+#     @property
+#     def sender_profile(self):
+#         if isinstance(self.sender, Artist):
+#             return self.sender
+#         elif isinstance(self.sender, Venue):
+#             return self.sender
+
+#     @property
+#     def receiver_profile(self):
+#         if isinstance(self.receiver, Artist):
+#             return self.receiver
+#         elif isinstance(self.receiver, Venue):
+#             return self.receiver

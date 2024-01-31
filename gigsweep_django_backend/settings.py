@@ -91,12 +91,12 @@ WSGI_APPLICATION = 'gigsweep_django_backend.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': BASE_DIR / 'db.sqlite3',
-#     }
-# }
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+    }
+}
 
 # DATABASES_LOCAL= {
 #     'default': {
@@ -109,17 +109,17 @@ WSGI_APPLICATION = 'gigsweep_django_backend.wsgi.application'
 #     }
 # }
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'gigsweep_schema',
-        'USER': 'admin',
-        'PASSWORD': 'Slash2406',
-        # or the MySQL server's IP address
-        'HOST': 'gigsweepdb.cuuwta3esqvt.eu-west-2.rds.amazonaws.com',
-        'PORT': '3306',       # the default MySQL port
-    }
-}
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.mysql',
+#         'NAME': 'gigsweep_schema',
+#         'USER': 'admin',
+#         'PASSWORD': 'Slash2406',
+#         # or the MySQL server's IP address
+#         'HOST': 'gigsweepdb.cuuwta3esqvt.eu-west-2.rds.amazonaws.com',
+#         'PORT': '3306',       # the default MySQL port
+#     }
+# }
 
 
 # Password validation
