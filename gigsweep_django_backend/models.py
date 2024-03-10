@@ -8,8 +8,8 @@ from django.contrib.contenttypes.models import ContentType
 class Artist(models.Model):
 
     artist_name = models.CharField(max_length=200)
-    email = models.EmailField(max_length=100)
-    password = models.CharField(max_length=50)
+    email = models.EmailField(max_length=100, null=True)
+    password = models.CharField(max_length=50, null=True)
     phone_number = models.CharField(max_length=20, null=True)
     # Change from CharField to TextField
     bio = models.TextField(null=True)

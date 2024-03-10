@@ -17,7 +17,6 @@ import json
 
 @api_view(['GET', 'POST'])
 def artist_list(request, format=None):
-
     if request.method == 'GET':
         artists = Artist.objects.all()
         serializer = ArtistSerializer(artists, many=True)
@@ -26,10 +25,9 @@ def artist_list(request, format=None):
     elif request.method == 'POST':
         serializer = ArtistSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            artist = serializer.save()
+            return Response({'id': artist.id, **serializer.data}, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['GET', 'PUT', 'DELETE'])
