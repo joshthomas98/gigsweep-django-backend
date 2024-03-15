@@ -240,3 +240,10 @@ IS_APPROVED_CHOICES = (
     ('Unapproved', 'Unapproved'),
     ('Approved', 'Approved'),
 )
+
+STATUS_CHOICES = (
+    ('Active', 'Active'),
+    ('Transferred', 'Transferred'),
+    ('Past', 'Past'),
+    # ('Applied For', 'Applied For'),
+)

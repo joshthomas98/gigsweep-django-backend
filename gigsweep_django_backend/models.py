@@ -1,5 +1,5 @@
 from django.db import models
-from .choices import GENRE_CHOICES, UK_COUNTRY_CHOICES, UK_COUNTY_CHOICES, ACT_TYPES, ARTIST_TYPES, GIGGING_DISTANCE, USER_TYPES, IS_APPROVED_CHOICES
+from .choices import GENRE_CHOICES, UK_COUNTRY_CHOICES, UK_COUNTY_CHOICES, ACT_TYPES, ARTIST_TYPES, GIGGING_DISTANCE, USER_TYPES, IS_APPROVED_CHOICES, STATUS_CHOICES
 from multiselectfield import MultiSelectField
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
@@ -92,6 +92,8 @@ class ArtistListedGig(models.Model):
     num_applications = models.PositiveIntegerField(default=0)
     # Change from CharField to TextField
     description = models.TextField(null=True)
+    status = MultiSelectField(
+        choices=STATUS_CHOICES, blank=True, max_length=200)
 
     def update_num_applications(self):
         self.num_applications = self.artists.count()
