@@ -7,7 +7,7 @@ from django.contrib.contenttypes.models import ContentType
 
 class Artist(models.Model):
 
-    artist_name = models.CharField(max_length=200)
+    artist_name = models.CharField(max_length=200, null=True)
     email = models.EmailField(max_length=100, null=True)
     password = models.CharField(max_length=50, null=True)
     phone_number = models.CharField(max_length=20, null=True)
