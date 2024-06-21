@@ -167,15 +167,13 @@ def venue_detail(request, id, format=None):
 
 @api_view(['POST'])
 def artist_sign_in(request):
-    # Convert entered email to lowercase
     email = request.data.get('email').lower()
     password = request.data.get('password')
 
     try:
-        # Case-insensitive email comparison
         artist = Artist.objects.get(email__iexact=email, password=password)
     except Artist.DoesNotExist:
-        return Response(status=status.HTTP_404_NOT_FOUND)
+        return Response({'detail': 'Invalid username or password.'}, status=status.HTTP_404_NOT_FOUND)
 
     serializer = ArtistSerializer(artist)
     return Response({'id': artist.id})

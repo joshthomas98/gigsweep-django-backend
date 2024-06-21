@@ -49,9 +49,9 @@ class Unavailability(models.Model):
 
 
 class Venue(models.Model):
-    venue_name = models.CharField(max_length=100)
-    email = models.EmailField(max_length=100)
-    password = models.CharField(max_length=50)
+    venue_name = models.CharField(max_length=100, null=True)
+    email = models.EmailField(max_length=100, null=True)
+    password = models.CharField(max_length=50, null=True)
     phone_number = models.CharField(max_length=20, null=True)
     # Change from CharField to TextField
     address = models.TextField(null=True)
