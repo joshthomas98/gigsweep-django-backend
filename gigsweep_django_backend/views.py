@@ -218,17 +218,14 @@ def artist_listed_gig_detail(request, id, format=None):
     if request.method == 'GET':
         serializer = ArtistListedGigEditSerializer(artist_listed_gig)
         return Response(serializer.data)
-
     elif request.method == 'PUT':
         serializer = ArtistListedGigEditSerializer(
             artist_listed_gig, data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
-
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
     elif request.method == 'DELETE':
         artist_listed_gig.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)

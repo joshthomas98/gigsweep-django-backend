@@ -1,5 +1,6 @@
 from django.db import models
 from .choices import GENRE_CHOICES, UK_COUNTRY_CHOICES, UK_COUNTY_CHOICES, ACT_TYPES, ARTIST_TYPES, GIGGING_DISTANCE, USER_TYPES, IS_APPROVED_CHOICES, STATUS_CHOICES
+from django.utils import timezone
 from multiselectfield import MultiSelectField
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
@@ -80,6 +81,8 @@ class ArtistListedGig(models.Model):
         Artist, on_delete=models.CASCADE, related_name='artist_listed_gigs', null=True)
     date_of_gig = models.DateField(null=True)
     venue_name = models.CharField(max_length=100)
+    venue = models.ForeignKey(
+        Venue, on_delete=models.CASCADE, related_name='gigs_at_venue', null=True)
     country_of_venue = models.CharField(
         max_length=100, choices=UK_COUNTRY_CHOICES)
     genre_of_gig = models.CharField(
@@ -192,8 +195,19 @@ class ArtistGigApplication(models.Model):
     artist = models.ForeignKey(Artist, on_delete=models.CASCADE, null=True)
     artist_gig = models.ForeignKey(
         ArtistListedGig, on_delete=models.CASCADE, null=True, related_name='artists')
+    original_artist = models.ForeignKey(
+        Artist, on_delete=models.CASCADE, related_name='original_gig_applications', null=True, blank=True)
+    venue = models.ForeignKey(
+        Venue, on_delete=models.CASCADE, null=True, blank=True)
+    message = models.TextField(null=True)
+    status = MultiSelectField(
+        choices=STATUS_CHOICES, blank=True, default=("Active",), max_length=200)
 
     def save(self, *args, **kwargs):
+        # Check if the gig date has passed
+        if self.artist_gig.date_of_gig and self.artist_gig.date_of_gig < timezone.now().date():
+            self.status = ("Past",)  # Set status to "Past"
+
         super().save(*args, **kwargs)
         self.artist_gig.update_num_applications()
         self.artist_gig.save()

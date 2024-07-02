@@ -32,18 +32,21 @@ class VenueSerializer(serializers.ModelSerializer):
 class ArtistListedGigCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = ArtistListedGig
-        fields = ['id', 'artist', 'date_of_gig', 'venue_name',
-                  'country_of_venue', 'genre_of_gig', 'type_of_gig', 'type_of_artist', 'payment', 'user_type', 'num_applications', 'description', 'status']
+        fields = ['id', 'artist', 'date_of_gig', 'venue_name', 'venue_id', 'country_of_venue', 'genre_of_gig',
+                  'type_of_gig', 'type_of_artist', 'payment', 'user_type', 'num_applications', 'description', 'status']
 
 
 class ArtistListedGigEditSerializer(serializers.ModelSerializer):
     artist_name = serializers.CharField(
         source='artist.artist_name', read_only=True)
+    artist_id = serializers.IntegerField(source='artist.id', read_only=True)
+    venue_id = serializers.IntegerField(source='venue.id', read_only=True)
 
     class Meta:
         model = ArtistListedGig
-        fields = ['id', 'artist_name', 'date_of_gig', 'venue_name',
-                  'country_of_venue', 'genre_of_gig', 'type_of_gig', 'type_of_artist', 'payment', 'user_type', 'num_applications', 'description', 'status']
+        fields = ['id', 'artist_name', 'artist_id', 'date_of_gig', 'venue_name', 'venue_id',
+                  'country_of_venue', 'genre_of_gig', 'type_of_gig', 'type_of_artist',
+                  'payment', 'user_type', 'num_applications', 'description', 'status']
 
 
 class VenueListedGigCreateSerializer(serializers.ModelSerializer):
@@ -105,7 +108,8 @@ class ArtistGigApplicationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ArtistGigApplication
-        fields = ['id', 'artist', 'artist_gig']
+        fields = ['id', 'artist', 'artist_gig',
+                  'original_artist', 'venue', 'message', 'status']
 
 
 class VenueGigApplicationSerializer(serializers.ModelSerializer):
