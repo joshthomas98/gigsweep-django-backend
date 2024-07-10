@@ -711,13 +711,21 @@ def search_bar_venues(request):
 
 # Artist Gig Application View
 
-@api_view(['POST'])
+@api_view(['GET', 'POST'])
 def artist_gig_application_list(request, format=None):
-    if request.method == 'POST':
+    if request.method == 'GET':
+        venue_id = request.query_params.get('venue_id')
+        if venue_id:
+            applications = ArtistGigApplication.objects.filter(
+                venue__id=venue_id)
+        else:
+            applications = ArtistGigApplication.objects.all()
+        serializer = ArtistGigApplicationSerializer(applications, many=True)
+        return Response(serializer.data)
+
+    elif request.method == 'POST':
         serializer = ArtistGigApplicationSerializer(data=request.data)
         if serializer.is_valid():
-            # Ensure that the artist_gig field is set to the corresponding gig
-            # Assuming you send the gig_id in the request data
             gig_id = request.data.get('artist_gig')
             artist_gig = get_object_or_404(ArtistListedGig, id=gig_id)
             serializer.save(artist_gig=artist_gig)
@@ -728,7 +736,6 @@ def artist_gig_application_list(request, format=None):
 
 @api_view(['GET', 'PUT', 'DELETE'])
 def artist_gig_application_detail(request, id, format=None):
-
     try:
         artist_gig_application = ArtistGigApplication.objects.get(pk=id)
     except ArtistGigApplication.DoesNotExist:
