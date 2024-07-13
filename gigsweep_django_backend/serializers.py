@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django import forms
-from .models import Artist, Unavailability, Venue, ArtistListedGig, VenueListedGig, NewsletterSignup, MembershipOptions, ArtistWrittenReview, VenueWrittenReview, ArtistGigApplication, VenueGigApplication
+from .models import Artist, Unavailability, Venue, ArtistListedGig, VenueListedGig, NewsletterSignup, MembershipOptions, ArtistWrittenReview, VenueWrittenReview, ArtistGigApplication, VenueGigApplication, VenueNotification, ArtistNotification
 from .choices import UK_COUNTY_CHOICES
 
 
@@ -32,7 +32,7 @@ class VenueSerializer(serializers.ModelSerializer):
 class ArtistListedGigCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = ArtistListedGig
-        fields = ['id', 'artist', 'date_of_gig', 'venue_name', 'venue_id', 'country_of_venue', 'genre_of_gig',
+        fields = ['id', 'artist', 'date_of_gig', 'venue_name', 'venue', 'country_of_venue', 'genre_of_gig',
                   'type_of_gig', 'type_of_artist', 'payment', 'user_type', 'num_applications', 'description', 'status']
 
 
@@ -144,3 +144,17 @@ class VenueGigApplicationSerializer(serializers.ModelSerializer):
 #         elif obj.receiver_content_type.model == 'venue':
 #             venue = Venue.objects.get(id=obj.receiver_object_id)
 #             return VenueSerializer(venue).data
+
+
+class VenueNotificationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = VenueNotification
+        fields = ['id', 'venue', 'message', 'is_read', 'created_at']
+        read_only_fields = ['created_at']
+
+
+class ArtistNotificationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ArtistNotification
+        fields = ['id', 'artist', 'message', 'is_read', 'created_at']
+        read_only_fields = ['created_at']

@@ -80,7 +80,7 @@ class ArtistListedGig(models.Model):
     artist = models.ForeignKey(
         Artist, on_delete=models.CASCADE, related_name='artist_listed_gigs', null=True)
     date_of_gig = models.DateField(null=True)
-    venue_name = models.CharField(max_length=100)
+    venue_name = models.CharField(max_length=100, null=True)
     venue = models.ForeignKey(
         Venue, on_delete=models.CASCADE, related_name='gigs_at_venue', null=True)
     country_of_venue = models.CharField(
@@ -93,13 +93,19 @@ class ArtistListedGig(models.Model):
     payment = models.IntegerField(null=True)
     user_type = models.CharField(max_length=50, choices=USER_TYPES, null=True)
     num_applications = models.PositiveIntegerField(default=0)
-    # Change from CharField to TextField
     description = models.TextField(null=True)
-    status = MultiSelectField(
-        choices=STATUS_CHOICES, blank=True, max_length=200)
+    status = MultiSelectField(choices=STATUS_CHOICES,
+                              blank=True, max_length=200, default="Active")
 
     def update_num_applications(self):
         self.num_applications = self.artists.count()
+
+    def save(self, *args, **kwargs):
+        if self.pk:  # Only check for status change if the instance already exists
+            previous = ArtistListedGig.objects.get(pk=self.pk)
+            if 'advertised' in self.status and 'advertised' not in previous.status:
+                self.notify_venue()
+        super().save(*args, **kwargs)
 
     def __str__(self):
         date_str = self.date_of_gig.strftime(
@@ -276,3 +282,33 @@ class VenueGigApplication(models.Model):
 #             return self.receiver
 #         elif isinstance(self.receiver, Venue):
 #             return self.receiver
+
+
+# Notification model for venues
+class VenueNotification(models.Model):
+    venue = models.ForeignKey(
+        Venue, on_delete=models.CASCADE, related_name='notifications')
+    message = models.TextField()
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Notification for venue {self.venue} - {self.message}"
+
+
+# Notification model for artists
+class ArtistNotification(models.Model):
+    artist = models.ForeignKey(
+        Artist, on_delete=models.CASCADE, related_name='notifications')
+    message = models.TextField()
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Notification for artist {self.artist} - {self.message}"

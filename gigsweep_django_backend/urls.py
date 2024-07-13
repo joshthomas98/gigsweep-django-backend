@@ -70,6 +70,9 @@ urlpatterns = [
 
     path('venuegigapplications/', views.venue_gig_application_list),
     path('venuegigapplications/<int:id>/', views.venue_gig_application_detail),
+
+    path('venue_notifications/<int:venue_id>/',
+         views.venue_notifications, name='venue_notifications'),
 ]
 
 if settings.DEBUG:

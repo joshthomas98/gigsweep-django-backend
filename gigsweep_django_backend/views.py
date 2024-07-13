@@ -6,8 +6,8 @@ from django.views.decorators.csrf import csrf_exempt
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status, generics
-from .models import Artist, Unavailability, Venue, ArtistListedGig, VenueListedGig, NewsletterSignup, MembershipOptions, ArtistWrittenReview, VenueWrittenReview, ArtistGigApplication, VenueGigApplication
-from .serializers import ArtistSerializer, UnavailabilitySerializer, VenueSerializer, ArtistListedGigCreateSerializer, ArtistListedGigEditSerializer, VenueListedGigCreateSerializer, VenueListedGigEditSerializer, NewsletterSignupSerializer, MembershipOptionsSerializer, ArtistWrittenReviewSerializer, VenueWrittenReviewSerializer, ArtistGigApplicationSerializer, VenueGigApplicationSerializer
+from .models import Artist, Unavailability, Venue, ArtistListedGig, VenueListedGig, NewsletterSignup, MembershipOptions, ArtistWrittenReview, VenueWrittenReview, ArtistGigApplication, VenueGigApplication, VenueNotification, ArtistNotification
+from .serializers import ArtistSerializer, UnavailabilitySerializer, VenueSerializer, ArtistListedGigCreateSerializer, ArtistListedGigEditSerializer, VenueListedGigCreateSerializer, VenueListedGigEditSerializer, NewsletterSignupSerializer, MembershipOptionsSerializer, ArtistWrittenReviewSerializer, VenueWrittenReviewSerializer, ArtistGigApplicationSerializer, VenueGigApplicationSerializer, VenueNotificationSerializer, ArtistNotificationSerializer
 from django.db.models import Q
 from django.utils import timezone
 import json
@@ -199,11 +199,22 @@ def venue_sign_in(request):
 
 # ArtistListedGig Views
 
+def notify_venue_on_gig_advertisement(gig):
+    """Notify the venue when an artist advertises a gig."""
+    if gig.venue:
+        message = f"The artist {gig.artist.artist_name} has advertised a gig on {gig.date_of_gig}."
+        VenueNotification.objects.create(
+            venue=gig.venue,
+            message=message
+        )
+
+
 @api_view(['POST'])
 def artist_listed_gig_list(request, format=None):
     serializer = ArtistListedGigCreateSerializer(data=request.data)
     if serializer.is_valid():
-        serializer.save()
+        gig = serializer.save()
+        notify_venue_on_gig_advertisement(gig)  # Notify the venue
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -840,3 +851,18 @@ def venue_gig_application_detail(request, id, format=None):
 #         queryset = ChatMessage.objects.filter(
 #             sender_object_id=user_id) | ChatMessage.objects.filter(receiver_object_id=user_id)
 #         return queryset
+
+
+# Functions for notification functionality
+
+# Venue notifications
+
+# Fetch notifications for a specific venue
+@api_view(['GET'])
+def venue_notifications(request, venue_id):
+    try:
+        notifications = VenueNotification.objects.filter(venue_id=venue_id)
+        serializer = VenueNotificationSerializer(notifications, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    except VenueNotification.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
