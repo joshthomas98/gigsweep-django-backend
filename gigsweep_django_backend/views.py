@@ -202,7 +202,7 @@ def venue_sign_in(request):
 def notify_venue_on_gig_advertisement(gig):
     """Notify the venue when an artist advertises a gig."""
     if gig.venue:
-        message = f"The artist {gig.artist.artist_name} has advertised a gig on {gig.date_of_gig}."
+        message = f"The artist {gig.artist.artist_name} has advertised their gig on {gig.date_of_gig}."
         VenueNotification.objects.create(
             venue=gig.venue,
             message=message
