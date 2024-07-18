@@ -149,7 +149,8 @@ class VenueGigApplicationSerializer(serializers.ModelSerializer):
 class VenueNotificationSerializer(serializers.ModelSerializer):
     class Meta:
         model = VenueNotification
-        fields = ['id', 'venue', 'message', 'is_read', 'created_at']
+        fields = ['id', 'venue', 'message',
+                  'notification_type', 'if_gig_advertised_by_artist', 'if_venue_made_gig', 'is_read', 'created_at']
         read_only_fields = ['created_at']
 
 

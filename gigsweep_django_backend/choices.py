@@ -247,3 +247,10 @@ STATUS_CHOICES = (
     ('Past', 'Past'),
     # ('Applied For', 'Applied For'),
 )
+
+VENUE_NOTIFICATION_TYPES = (
+    ('GIG_TRANSFER', 'Gig Transfer'),
+    ('VENUE_ADVERTISED_GIG', 'Venue Advertised Gig'),
+    ('GENERAL_GIGSWEEP_UPDATES', 'General Gigsweep Updates'),
+    ('TEST', 'Test'),
+)

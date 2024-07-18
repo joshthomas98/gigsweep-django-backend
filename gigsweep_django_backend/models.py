@@ -1,5 +1,5 @@
 from django.db import models
-from .choices import GENRE_CHOICES, UK_COUNTRY_CHOICES, UK_COUNTY_CHOICES, ACT_TYPES, ARTIST_TYPES, GIGGING_DISTANCE, USER_TYPES, IS_APPROVED_CHOICES, STATUS_CHOICES
+from .choices import GENRE_CHOICES, UK_COUNTRY_CHOICES, UK_COUNTY_CHOICES, ACT_TYPES, ARTIST_TYPES, GIGGING_DISTANCE, USER_TYPES, IS_APPROVED_CHOICES, STATUS_CHOICES, VENUE_NOTIFICATION_TYPES
 from django.utils import timezone
 from multiselectfield import MultiSelectField
 from django.contrib.contenttypes.fields import GenericForeignKey
@@ -98,7 +98,7 @@ class ArtistListedGig(models.Model):
                               blank=True, max_length=200, default="Active")
 
     def update_num_applications(self):
-        self.num_applications = self.artists.count()
+        self.num_applications = self.applications.count()
 
     def save(self, *args, **kwargs):
         if self.pk:  # Only check for status change if the instance already exists
@@ -111,6 +111,10 @@ class ArtistListedGig(models.Model):
         date_str = self.date_of_gig.strftime(
             '%d %b %Y') if self.date_of_gig else ''
         return f"{self.artist} - {self.venue_name} - {date_str}"
+
+    @property
+    def applications(self):
+        return self.applications.all()  # Access related ArtistGigApplication instances
 
 
 class VenueListedGig(models.Model):
@@ -200,7 +204,7 @@ class VenueWrittenReview(models.Model):
 class ArtistGigApplication(models.Model):
     artist = models.ForeignKey(Artist, on_delete=models.CASCADE, null=True)
     artist_gig = models.ForeignKey(
-        ArtistListedGig, on_delete=models.CASCADE, null=True, related_name='artists')
+        ArtistListedGig, on_delete=models.CASCADE, null=True, related_name='applications')
     original_artist = models.ForeignKey(
         Artist, on_delete=models.CASCADE, related_name='original_gig_applications', null=True, blank=True)
     venue = models.ForeignKey(
@@ -287,8 +291,17 @@ class VenueGigApplication(models.Model):
 # Notification model for venues
 class VenueNotification(models.Model):
     venue = models.ForeignKey(
-        Venue, on_delete=models.CASCADE, related_name='notifications')
+        Venue, on_delete=models.CASCADE, related_name='notifications'
+    )
     message = models.TextField()
+    notification_type = MultiSelectField(
+        choices=VENUE_NOTIFICATION_TYPES,
+        blank=False,
+        max_length=200,
+        null=False,
+    )
+    if_gig_advertised_by_artist = models.IntegerField(null=True, blank=True)
+    if_venue_made_gig = models.IntegerField(null=True, blank=True)
     is_read = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 

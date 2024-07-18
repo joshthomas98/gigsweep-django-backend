@@ -23,6 +23,8 @@ urlpatterns = [
 
     path('artist_listed_gigs/', views.artist_listed_gig_list),
     path('artist_listed_gigs/<int:id>/', views.artist_listed_gig_detail),
+    path('artist_listed_gigs/<int:gig_id>/applications/',
+         views.artist_gig_applications, name='artist_gig_applications'),
 
     path('venue_listed_gigs/', views.venue_listed_gig_list),
     path('venue_listed_gigs/<int:id>/', views.venue_listed_gig_detail),

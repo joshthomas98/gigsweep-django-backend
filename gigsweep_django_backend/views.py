@@ -205,7 +205,9 @@ def notify_venue_on_gig_advertisement(gig):
         message = f"The artist {gig.artist.artist_name} has advertised their gig on {gig.date_of_gig}."
         VenueNotification.objects.create(
             venue=gig.venue,
-            message=message
+            message=message,
+            notification_type=["GIG_TRANSFER"],
+            if_gig_advertised_by_artist=gig.id  # Store the gig ID
         )
 
 
@@ -240,6 +242,19 @@ def artist_listed_gig_detail(request, id, format=None):
     elif request.method == 'DELETE':
         artist_listed_gig.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+@api_view(['GET'])
+def artist_gig_applications(request, gig_id):
+    try:
+        artist_listed_gig = ArtistListedGig.objects.get(pk=gig_id)
+    except ArtistListedGig.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+    applications = ArtistGigApplication.objects.filter(
+        artist_gig=artist_listed_gig)
+    serializer = ArtistGigApplicationSerializer(applications, many=True)
+    return Response(serializer.data)
 
 
 # Artist Listed Gigs By Artist View
