@@ -84,7 +84,7 @@ class ArtistListedGig(models.Model):
     venue = models.ForeignKey(
         Venue, on_delete=models.CASCADE, related_name='gigs_at_venue', null=True)
     country_of_venue = models.CharField(
-        max_length=100, choices=UK_COUNTRY_CHOICES)
+        max_length=100, choices=UK_COUNTRY_CHOICES, null=True)
     genre_of_gig = models.CharField(
         max_length=50, choices=GENRE_CHOICES, null=True)
     type_of_gig = models.CharField(max_length=50, choices=ACT_TYPES, null=True)
@@ -115,6 +115,14 @@ class ArtistListedGig(models.Model):
     @property
     def applications(self):
         return self.applications.all()  # Access related ArtistGigApplication instances
+
+    def delete(self, *args, **kwargs):
+        # Delete related notifications
+        VenueNotification.objects.filter(
+            if_gig_advertised_by_artist=self.id
+        ).delete()
+        # Call the original delete method
+        super().delete(*args, **kwargs)
 
 
 class VenueListedGig(models.Model):
@@ -210,6 +218,7 @@ class ArtistGigApplication(models.Model):
     venue = models.ForeignKey(
         Venue, on_delete=models.CASCADE, null=True, blank=True)
     message = models.TextField(null=True)
+    applied_at = models.DateTimeField(auto_now_add=True)
     status = MultiSelectField(
         choices=STATUS_CHOICES, blank=True, default=("Active",), max_length=200)
 

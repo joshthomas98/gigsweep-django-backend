@@ -37,16 +37,37 @@ class ArtistListedGigCreateSerializer(serializers.ModelSerializer):
 
 
 class ArtistListedGigEditSerializer(serializers.ModelSerializer):
+    artist_id = serializers.IntegerField(
+        write_only=True, required=True)  # Used for input, not output
     artist_name = serializers.CharField(
-        source='artist.artist_name', read_only=True)
-    artist_id = serializers.IntegerField(source='artist.id', read_only=True)
-    venue_id = serializers.IntegerField(source='venue.id', read_only=True)
+        source='artist.artist_name', read_only=True)  # Read-only field
 
     class Meta:
         model = ArtistListedGig
-        fields = ['id', 'artist_name', 'artist_id', 'date_of_gig', 'venue_name', 'venue_id',
-                  'country_of_venue', 'genre_of_gig', 'type_of_gig', 'type_of_artist',
-                  'payment', 'user_type', 'num_applications', 'description', 'status']
+        fields = [
+            'id', 'artist_name', 'artist_id', 'artist', 'date_of_gig', 'venue_name', 'venue_id',
+            'country_of_venue', 'genre_of_gig', 'type_of_gig', 'type_of_artist',
+            'payment', 'user_type', 'num_applications', 'description', 'status'
+        ]
+
+    def update(self, instance, validated_data):
+        # Get artist_id from validated data
+        artist_id = validated_data.pop('artist_id', None)
+
+        # If artist_id is provided, update the artist field
+        if artist_id is not None:
+            try:
+                instance.artist = Artist.objects.get(id=artist_id)
+            except Artist.DoesNotExist:
+                raise serializers.ValidationError(
+                    f"Artist with id {artist_id} does not exist.")
+
+        # Update other fields in the model
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+
+        instance.save()
+        return instance
 
 
 class VenueListedGigCreateSerializer(serializers.ModelSerializer):
@@ -109,7 +130,7 @@ class ArtistGigApplicationSerializer(serializers.ModelSerializer):
     class Meta:
         model = ArtistGigApplication
         fields = ['id', 'artist', 'artist_gig',
-                  'original_artist', 'venue', 'message', 'status']
+                  'original_artist', 'venue', 'message', 'applied_at', 'status']
 
 
 class VenueGigApplicationSerializer(serializers.ModelSerializer):
