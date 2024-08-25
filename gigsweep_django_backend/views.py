@@ -6,8 +6,8 @@ from django.views.decorators.csrf import csrf_exempt
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status, generics
-from .models import Artist, Unavailability, Venue, ArtistListedGig, VenueListedGig, NewsletterSignup, MembershipOptions, ArtistWrittenReview, VenueWrittenReview, ArtistGigApplication, VenueGigApplication, VenueNotification, ArtistNotification
-from .serializers import ArtistSerializer, UnavailabilitySerializer, VenueSerializer, ArtistListedGigCreateSerializer, ArtistListedGigEditSerializer, VenueListedGigCreateSerializer, VenueListedGigEditSerializer, NewsletterSignupSerializer, MembershipOptionsSerializer, ArtistWrittenReviewSerializer, VenueWrittenReviewSerializer, ArtistGigApplicationSerializer, VenueGigApplicationSerializer, VenueNotificationSerializer, ArtistNotificationSerializer
+from .models import Artist, Unavailability, Venue, ArtistGig, VenueListedGig, NewsletterSignup, MembershipOptions, ArtistWrittenReview, VenueWrittenReview, ArtistGigApplication, VenueGigApplication, VenueNotification, ArtistNotification, ContactQuery
+from .serializers import ArtistSerializer, UnavailabilitySerializer, VenueSerializer, ArtistGigCreateSerializer, ArtistGigEditSerializer, VenueListedGigCreateSerializer, VenueListedGigEditSerializer, NewsletterSignupSerializer, MembershipOptionsSerializer, ArtistWrittenReviewSerializer, VenueWrittenReviewSerializer, ArtistGigApplicationSerializer, VenueGigApplicationSerializer, VenueNotificationSerializer, ArtistNotificationSerializer, ContactQuerySerializer
 from django.db.models import Q
 from django.utils import timezone
 import json
@@ -197,12 +197,12 @@ def venue_sign_in(request):
     return Response({'id': venue.id})
 
 
-# ArtistListedGig Views
+# ArtistGig Views
 
 def notify_venue_on_gig_advertisement(gig):
     """Notify the venue when an artist advertises a gig."""
     if gig.venue:
-        message = f"The artist {gig.artist.artist_name} has advertised their gig on {gig.date_of_gig}."
+        message = f"The artist {gig.current_artist.artist_name} has advertised their gig on {gig.date_of_gig}."
         VenueNotification.objects.create(
             venue=gig.venue,
             message=message,
@@ -212,61 +212,67 @@ def notify_venue_on_gig_advertisement(gig):
 
 
 @api_view(['POST'])
-def artist_listed_gig_list(request, format=None):
-    serializer = ArtistListedGigCreateSerializer(data=request.data)
+def artist_gig_list(request, format=None):
+    serializer = ArtistGigCreateSerializer(data=request.data)
     if serializer.is_valid():
         gig = serializer.save()
-        notify_venue_on_gig_advertisement(gig)  # Notify the venue
+        if gig.is_advertised:  # Check if the gig is advertised
+            notify_venue_on_gig_advertisement(gig)  # Notify the venue
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['GET', 'PUT', 'DELETE'])
-def artist_listed_gig_detail(request, id, format=None):
+def artist_gig_detail(request, id, format=None):
     try:
-        artist_listed_gig = ArtistListedGig.objects.get(pk=id)
-    except ArtistListedGig.DoesNotExist:
+        artist_gig = ArtistGig.objects.get(pk=id)
+    except ArtistGig.DoesNotExist:
         return Response(status=status.HTTP_404_NOT_FOUND)
 
     if request.method == 'GET':
-        serializer = ArtistListedGigEditSerializer(artist_listed_gig)
+        serializer = ArtistGigEditSerializer(artist_gig)
         return Response(serializer.data)
+
     elif request.method == 'PUT':
-        serializer = ArtistListedGigEditSerializer(
-            artist_listed_gig, data=request.data, partial=True)
+        original_is_advertised = artist_gig.is_advertised
+        serializer = ArtistGigEditSerializer(
+            artist_gig, data=request.data, partial=True)
+
         if serializer.is_valid():
-            print("Serializer is valid")
-            serializer.save()
-            print(f"Updated artist: {serializer.data.get('artist_name')}")
+            updated_gig = serializer.save()
+
+            # Notify venue if gig was not advertised before but is now advertised
+            if not original_is_advertised and updated_gig.is_advertised:
+                notify_venue_on_gig_advertisement(updated_gig)
+
             return Response(serializer.data)
         else:
-            print(serializer.errors)  # Debugging line
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
     elif request.method == 'DELETE':
-        artist_listed_gig.delete()
+        artist_gig.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 @api_view(['GET'])
 def artist_gig_applications(request, gig_id):
     try:
-        artist_listed_gig = ArtistListedGig.objects.get(pk=gig_id)
-    except ArtistListedGig.DoesNotExist:
+        artist_gig = ArtistGig.objects.get(pk=gig_id)
+    except ArtistGig.DoesNotExist:
         return Response(status=status.HTTP_404_NOT_FOUND)
 
-    applications = ArtistGigApplication.objects.filter(
-        artist_gig=artist_listed_gig)
+    applications = ArtistGigApplication.objects.filter(artist_gig=artist_gig)
     serializer = ArtistGigApplicationSerializer(applications, many=True)
     return Response(serializer.data)
 
 
-# Artist Listed Gigs By Artist View
+# Artist Gigs By Artist View
 
 @api_view(['GET'])
-def artist_listed_gigs_by_artist(request, artist_id, format=None):
+def artist_gigs_by_artist(request, artist_id, format=None):
     artist = get_object_or_404(Artist, id=artist_id)
-    artist_listed_gigs = artist.artist_listed_gigs.all()
-    serializer = ArtistListedGigCreateSerializer(artist_listed_gigs, many=True)
+    artist_gigs = artist.current_artist_gigs.all()
+    serializer = ArtistGigCreateSerializer(artist_gigs, many=True)
     return Response(serializer.data)
 
 
@@ -483,19 +489,31 @@ def gig_search(request):
     type_of_gig = request.data.get('type_of_gig')
     payment = request.data.get('payment')
 
-    artist_listed_gigs = ArtistListedGig.objects.filter(
-        date_of_gig=date_of_gig, country_of_venue=country_of_venue, genre_of_gig=genre_of_gig, type_of_gig=type_of_gig, payment__gte=payment)
+    # Filter ArtistGigs with additional condition of is_advertised=True
+    artist_gigs = ArtistGig.objects.filter(
+        date_of_gig=date_of_gig,
+        country_of_venue=country_of_venue,
+        genre_of_gig=genre_of_gig,
+        type_of_gig=type_of_gig,
+        payment__gte=payment,
+        is_advertised=True  # Only return gigs that are advertised
+    )
 
+    # Filter VenueListedGigs as usual
     venue_listed_gigs = VenueListedGig.objects.filter(
-        date_of_gig=date_of_gig, country_of_venue=country_of_venue, genre_of_gig=genre_of_gig, type_of_gig=type_of_gig, payment__gte=payment)
+        date_of_gig=date_of_gig,
+        country_of_venue=country_of_venue,
+        genre_of_gig=genre_of_gig,
+        type_of_gig=type_of_gig,
+        payment__gte=payment
+    )
 
-    artist_listed_gig_serializer = ArtistListedGigEditSerializer(
-        artist_listed_gigs, many=True)
+    artist_gig_serializer = ArtistGigEditSerializer(artist_gigs, many=True)
     venue_listed_gig_serializer = VenueListedGigEditSerializer(
         venue_listed_gigs, many=True)
 
     response_data = {
-        'artist_listed_gigs': artist_listed_gig_serializer.data,
+        'artist_gigs': artist_gig_serializer.data,
         'venue_listed_gigs': venue_listed_gig_serializer.data
     }
 
@@ -756,7 +774,7 @@ def artist_gig_application_list(request, format=None):
         serializer = ArtistGigApplicationSerializer(data=request.data)
         if serializer.is_valid():
             gig_id = request.data.get('artist_gig')
-            artist_gig = get_object_or_404(ArtistListedGig, id=gig_id)
+            artist_gig = get_object_or_404(ArtistGig, id=gig_id)
             serializer.save(artist_gig=artist_gig)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         else:
@@ -884,3 +902,46 @@ def venue_notifications(request, venue_id):
         return Response(serializer.data, status=status.HTTP_200_OK)
     except VenueNotification.DoesNotExist:
         return Response(status=status.HTTP_404_NOT_FOUND)
+
+
+# Contact GigSweep
+
+@api_view(['GET', 'POST'])
+def contact_query_list(request, format=None):
+    if request.method == 'GET':
+        contact_queries = ContactQuery.objects.all()
+        serializer = ContactQuerySerializer(
+            contact_queries, many=True)
+        return Response(serializer.data)
+
+    elif request.method == 'POST':
+        serializer = ContactQuerySerializer(data=request.data)
+        if serializer.is_valid():
+            query = serializer.save()
+            return Response({'id': query.id, **serializer.data}, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['GET', 'PUT', 'DELETE'])
+def contact_query_detail(request, id, format=None):
+
+    try:
+        query = ContactQuery.objects.get(pk=id)
+    except ContactQuery.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+    if request.method == 'GET':
+        serializer = ContactQuerySerializer(query)
+        return Response(serializer.data)
+
+    elif request.method == 'PUT':
+        serializer = ContactQuerySerializer(query, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    elif request.method == 'DELETE':
+        query.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)

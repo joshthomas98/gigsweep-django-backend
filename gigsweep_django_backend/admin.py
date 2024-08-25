@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Artist, Unavailability, Venue, ArtistListedGig, VenueListedGig, NewsletterSignup, MembershipOptions, ArtistWrittenReview, VenueWrittenReview, ArtistGigApplication, VenueGigApplication, VenueNotification, ArtistNotification
+from .models import Artist, Unavailability, Venue, ArtistGig, VenueListedGig, NewsletterSignup, MembershipOptions, ArtistWrittenReview, VenueWrittenReview, ArtistGigApplication, VenueGigApplication, VenueNotification, ArtistNotification, ContactQuery
 
 
 class ArtistGigApplicationInline(admin.TabularInline):
@@ -7,14 +7,14 @@ class ArtistGigApplicationInline(admin.TabularInline):
     extra = 0  # No extra empty forms
 
 
-class ArtistListedGigAdmin(admin.ModelAdmin):
+class ArtistGigAdmin(admin.ModelAdmin):
     inlines = [ArtistGigApplicationInline]
 
 
 admin.site.register(Artist)
 admin.site.register(Unavailability)
 admin.site.register(Venue)
-admin.site.register(ArtistListedGig, ArtistListedGigAdmin)
+admin.site.register(ArtistGig, ArtistGigAdmin)
 admin.site.register(VenueListedGig)
 admin.site.register(NewsletterSignup)
 admin.site.register(MembershipOptions)
@@ -24,3 +24,4 @@ admin.site.register(ArtistGigApplication)
 admin.site.register(VenueGigApplication)
 admin.site.register(VenueNotification)
 admin.site.register(ArtistNotification)
+admin.site.register(ContactQuery)

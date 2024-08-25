@@ -4,6 +4,7 @@ from django.utils import timezone
 from multiselectfield import MultiSelectField
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
+from datetime import datetime, date
 
 
 class Artist(models.Model):
@@ -76,13 +77,19 @@ class Venue(models.Model):
         return self.venue_name
 
 
-class ArtistListedGig(models.Model):
-    artist = models.ForeignKey(
-        Artist, on_delete=models.CASCADE, related_name='artist_listed_gigs', null=True)
+class ArtistGig(models.Model):
+    original_artist = models.ForeignKey(
+        Artist, on_delete=models.CASCADE, related_name='original_artist_gigs', null=True)
+    current_artist = models.ForeignKey(
+        Artist, on_delete=models.CASCADE, related_name='current_artist_gigs', null=True)
+    previous_artists = models.ManyToManyField(
+        Artist, related_name='previous_artist_gigs', blank=True)
     date_of_gig = models.DateField(null=True)
+    time_of_gig = models.TimeField(null=True)
+    duration_of_gig = models.PositiveIntegerField(null=True)
     venue_name = models.CharField(max_length=100, null=True)
     venue = models.ForeignKey(
-        Venue, on_delete=models.CASCADE, related_name='gigs_at_venue', null=True)
+        Venue, on_delete=models.CASCADE, related_name='gigs_at_venue', null=True, blank=True)
     country_of_venue = models.CharField(
         max_length=100, choices=UK_COUNTRY_CHOICES, null=True)
     genre_of_gig = models.CharField(
@@ -93,24 +100,62 @@ class ArtistListedGig(models.Model):
     payment = models.IntegerField(null=True)
     user_type = models.CharField(max_length=50, choices=USER_TYPES, null=True)
     num_applications = models.PositiveIntegerField(default=0)
-    description = models.TextField(null=True)
+    notes_about_gig = models.TextField(null=True, blank=True)
+    reason_for_advertising = models.TextField(null=True, blank=True)
     status = MultiSelectField(choices=STATUS_CHOICES,
                               blank=True, max_length=200, default="Active")
+    transfer_history = models.TextField(null=True, blank=True)
+
+    # New fields
+    is_advertised = models.BooleanField(default=False)
+    advertised_at = models.DateTimeField(null=True, blank=True)
 
     def update_num_applications(self):
         self.num_applications = self.applications.count()
 
     def save(self, *args, **kwargs):
-        if self.pk:  # Only check for status change if the instance already exists
-            previous = ArtistListedGig.objects.get(pk=self.pk)
-            if 'advertised' in self.status and 'advertised' not in previous.status:
-                self.notify_venue()
+        # Check if the gig date is in the past
+        if self.date_of_gig and self.date_of_gig < date.today():
+            self.status = 'Past'
+
+        if self.pk:  # Check if it's an update to an existing instance
+            previous = ArtistGig.objects.get(pk=self.pk)
+            if self.current_artist != previous.current_artist:
+                # If the artist has changed, log the transfer
+                self.previous_artists.add(previous.current_artist)
+                transfer_record = f"Transferred from {previous.current_artist} to {self.current_artist} on {datetime.now().strftime('%Y-%m-%d')}\n"
+                self.transfer_history = (
+                    self.transfer_history or "") + transfer_record
+                self.is_advertised = False  # Gig should no longer be advertised after transfer
+
+        else:
+            # For new instances, set the original artist as the current artist
+            if not self.current_artist:
+                self.current_artist = self.original_artist
+
         super().save(*args, **kwargs)
+
+    def advertise(self):
+        self.is_advertised = True
+        self.status = 'advertised'
+        self.advertised_at = timezone.now()
+        self.save()
+
+    def unadvertise(self):
+        self.is_advertised = False
+        self.status = 'booked'
+        self.save()
+
+    def transfer(self, new_artist):
+        self.current_artist = new_artist
+        self.status = 'transferred'
+        self.is_advertised = False  # After transfer, it's no longer advertised
+        self.save()
 
     def __str__(self):
         date_str = self.date_of_gig.strftime(
             '%d %b %Y') if self.date_of_gig else ''
-        return f"{self.artist} - {self.venue_name} - {date_str}"
+        return f"{self.current_artist} - {self.venue_name} - {date_str}"
 
     @property
     def applications(self):
@@ -212,7 +257,7 @@ class VenueWrittenReview(models.Model):
 class ArtistGigApplication(models.Model):
     artist = models.ForeignKey(Artist, on_delete=models.CASCADE, null=True)
     artist_gig = models.ForeignKey(
-        ArtistListedGig, on_delete=models.CASCADE, null=True, related_name='applications')
+        ArtistGig, on_delete=models.CASCADE, null=True, related_name='applications')
     original_artist = models.ForeignKey(
         Artist, on_delete=models.CASCADE, related_name='original_gig_applications', null=True, blank=True)
     venue = models.ForeignKey(
@@ -334,3 +379,14 @@ class ArtistNotification(models.Model):
 
     def __str__(self):
         return f"Notification for artist {self.artist} - {self.message}"
+
+
+# Contact GigSweep model
+class ContactQuery(models.Model):
+    name = models.CharField(max_length=100, null=True)
+    email = models.CharField(max_length=200, null=True)
+    phone = models.CharField(max_length=100, null=True)
+    message = models.TextField(null=True)
+
+    def __str__(self):
+        return f"Support query from {self.name} - {self.email}"

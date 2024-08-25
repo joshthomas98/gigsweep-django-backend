@@ -21,16 +21,16 @@ urlpatterns = [
     path('artists/validate/', views.artist_sign_in),
     path('venues/validate/', views.venue_sign_in),
 
-    path('artist_listed_gigs/', views.artist_listed_gig_list),
-    path('artist_listed_gigs/<int:id>/', views.artist_listed_gig_detail),
-    path('artist_listed_gigs/<int:gig_id>/applications/',
-         views.artist_gig_applications, name='artist_gig_applications'),
+    path('artist_gigs/', views.artist_gig_list),
+    # Updated path for retrieving, updating, or deleting a specific artist gig
+    path('artist_gigs/<int:id>/', views.artist_gig_detail),
+    path('artist_gigs/<int:gig_id>/applications/', views.artist_gig_applications,
+         name='artist_gig_applications'),  # Path for getting applications for a specific gig
 
     path('venue_listed_gigs/', views.venue_listed_gig_list),
     path('venue_listed_gigs/<int:id>/', views.venue_listed_gig_detail),
 
-    path('artists/<int:artist_id>/listed_gigs/',
-         views.artist_listed_gigs_by_artist),
+    path('artists/<int:artist_id>/gigs/', views.artist_gigs_by_artist),
     path('venues/<int:venue_id>/listed_gigs/',
          views.venue_listed_gigs_by_venue),
 
@@ -75,6 +75,9 @@ urlpatterns = [
 
     path('venue_notifications/<int:venue_id>/',
          views.venue_notifications, name='venue_notifications'),
+
+    path('contactqueries/', views.contact_query_list),
+    path('contactqueries/<int:id>/', views.contact_query_detail),
 ]
 
 if settings.DEBUG:

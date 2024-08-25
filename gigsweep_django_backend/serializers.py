@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django import forms
-from .models import Artist, Unavailability, Venue, ArtistListedGig, VenueListedGig, NewsletterSignup, MembershipOptions, ArtistWrittenReview, VenueWrittenReview, ArtistGigApplication, VenueGigApplication, VenueNotification, ArtistNotification
+from .models import Artist, Unavailability, Venue, ArtistGig, VenueListedGig, NewsletterSignup, MembershipOptions, ArtistWrittenReview, VenueWrittenReview, ArtistGigApplication, VenueGigApplication, VenueNotification, ArtistNotification, ContactQuery
 from .choices import UK_COUNTY_CHOICES
 
 
@@ -29,38 +29,49 @@ class VenueSerializer(serializers.ModelSerializer):
                   'country', 'county', 'image', 'type_of_act', 'user_type', 'facebook', 'twitter', 'youtube', 'venue_membership_type']
 
 
-class ArtistListedGigCreateSerializer(serializers.ModelSerializer):
+class ArtistGigCreateSerializer(serializers.ModelSerializer):
     class Meta:
-        model = ArtistListedGig
-        fields = ['id', 'artist', 'date_of_gig', 'venue_name', 'venue', 'country_of_venue', 'genre_of_gig',
-                  'type_of_gig', 'type_of_artist', 'payment', 'user_type', 'num_applications', 'description', 'status']
-
-
-class ArtistListedGigEditSerializer(serializers.ModelSerializer):
-    artist_id = serializers.IntegerField(
-        write_only=True, required=True)  # Used for input, not output
-    artist_name = serializers.CharField(
-        source='artist.artist_name', read_only=True)  # Read-only field
-
-    class Meta:
-        model = ArtistListedGig
+        model = ArtistGig
         fields = [
-            'id', 'artist_name', 'artist_id', 'artist', 'date_of_gig', 'venue_name', 'venue_id',
-            'country_of_venue', 'genre_of_gig', 'type_of_gig', 'type_of_artist',
-            'payment', 'user_type', 'num_applications', 'description', 'status'
+            'id', 'original_artist', 'current_artist', 'previous_artists', 'date_of_gig', 'time_of_gig', 'duration_of_gig', 'venue_name', 'venue',
+            'country_of_venue', 'genre_of_gig', 'type_of_gig', 'type_of_artist', 'payment',
+            'user_type', 'num_applications', 'notes_about_gig', 'reason_for_advertising', 'status', 'is_advertised'
         ]
+        # 'is_advertised' is set to read-only to ensure it's not modified during creation
+        read_only_fields = ['is_advertised']
+
+
+class ArtistGigEditSerializer(serializers.ModelSerializer):
+    current_artist_id = serializers.IntegerField(
+        write_only=True, required=True)  # Used for input, not output
+    current_artist_name = serializers.CharField(
+        source='current_artist.artist_name', read_only=True)  # Read-only field
+    # Read-only, as it is auto-populated when a gig is advertised
+    advertised_at = serializers.DateTimeField(read_only=True)
+
+    class Meta:
+        model = ArtistGig
+        fields = [
+            'id', 'original_artist', 'current_artist_id', 'current_artist_name', 'date_of_gig', 'time_of_gig', 'duration_of_gig', 'venue_name', 'venue',
+            'country_of_venue', 'genre_of_gig', 'type_of_gig', 'type_of_artist',
+            'payment', 'user_type', 'num_applications', 'notes_about_gig', 'reason_for_advertising', 'status',
+            'previous_artists', 'transfer_history', 'is_advertised', 'advertised_at'
+        ]
+        read_only_fields = ['previous_artists',
+                            'transfer_history', 'advertised_at', 'is_advertised']
 
     def update(self, instance, validated_data):
-        # Get artist_id from validated data
-        artist_id = validated_data.pop('artist_id', None)
+        # Get current_artist_id from validated data
+        current_artist_id = validated_data.pop('current_artist_id', None)
 
-        # If artist_id is provided, update the artist field
-        if artist_id is not None:
+        # If current_artist_id is provided, update the current_artist field
+        if current_artist_id is not None:
             try:
-                instance.artist = Artist.objects.get(id=artist_id)
+                instance.current_artist = Artist.objects.get(
+                    id=current_artist_id)
             except Artist.DoesNotExist:
                 raise serializers.ValidationError(
-                    f"Artist with id {artist_id} does not exist.")
+                    f"Artist with id {current_artist_id} does not exist.")
 
         # Update other fields in the model
         for attr, value in validated_data.items():
@@ -180,3 +191,10 @@ class ArtistNotificationSerializer(serializers.ModelSerializer):
         model = ArtistNotification
         fields = ['id', 'artist', 'message', 'is_read', 'created_at']
         read_only_fields = ['created_at']
+
+
+class ContactQuerySerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = ContactQuery
+        fields = ['id', 'name', 'email', 'phone', 'message']
