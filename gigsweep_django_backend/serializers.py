@@ -43,10 +43,9 @@ class ArtistGigCreateSerializer(serializers.ModelSerializer):
 
 class ArtistGigEditSerializer(serializers.ModelSerializer):
     current_artist_id = serializers.IntegerField(
-        write_only=True, required=True)  # Used for input, not output
+        write_only=True, required=True)
     current_artist_name = serializers.CharField(
-        source='current_artist.artist_name', read_only=True)  # Read-only field
-    # Read-only, as it is auto-populated when a gig is advertised
+        source='current_artist.artist_name', read_only=True)
     advertised_at = serializers.DateTimeField(read_only=True)
 
     class Meta:
@@ -58,13 +57,11 @@ class ArtistGigEditSerializer(serializers.ModelSerializer):
             'previous_artists', 'transfer_history', 'is_advertised', 'advertised_at'
         ]
         read_only_fields = ['previous_artists',
-                            'transfer_history', 'advertised_at', 'is_advertised']
+                            'transfer_history', 'advertised_at']
 
     def update(self, instance, validated_data):
-        # Get current_artist_id from validated data
         current_artist_id = validated_data.pop('current_artist_id', None)
 
-        # If current_artist_id is provided, update the current_artist field
         if current_artist_id is not None:
             try:
                 instance.current_artist = Artist.objects.get(
@@ -73,7 +70,6 @@ class ArtistGigEditSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError(
                     f"Artist with id {current_artist_id} does not exist.")
 
-        # Update other fields in the model
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
 
