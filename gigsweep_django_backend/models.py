@@ -170,36 +170,70 @@ class ArtistGig(models.Model):
         super().delete(*args, **kwargs)
 
 
-class VenueListedGig(models.Model):
+class VenueGig(models.Model):
     venue = models.ForeignKey(
-        Venue, on_delete=models.CASCADE, related_name='venue_listed_gigs', null=True)
+        Venue, on_delete=models.CASCADE, related_name='venue_gigs', null=True
+    )
     date_of_gig = models.DateField(null=True)
+    time_of_gig = models.TimeField(null=True)
+    duration_of_gig = models.PositiveIntegerField(null=True)
     country_of_venue = models.CharField(
-        max_length=100, choices=UK_COUNTRY_CHOICES, null=True)
+        max_length=100, choices=UK_COUNTRY_CHOICES, null=True
+    )
     genre_of_gig = models.CharField(
-        max_length=50, choices=GENRE_CHOICES, null=True)
+        max_length=50, choices=GENRE_CHOICES, null=True
+    )
     type_of_gig = models.CharField(max_length=50, choices=ACT_TYPES, null=True)
     artist_type = models.CharField(
-        max_length=50, choices=ARTIST_TYPES, null=True)
+        max_length=50, choices=ARTIST_TYPES, null=True
+    )
     payment = models.IntegerField(null=True)
     user_type = models.CharField(
-        max_length=50, choices=USER_TYPES, null=True)
+        max_length=50, choices=USER_TYPES, null=True
+    )
     num_applications = models.PositiveIntegerField(default=0)
-    # Change from CharField to TextField
     description = models.TextField(null=True)
+
+    # New fields for handling advertised gigs
+    is_advertised = models.BooleanField(default=False)
+    advertised_at = models.DateTimeField(null=True, blank=True)
+    # Whether a gig slot needs an artist
+    artist_needed = models.BooleanField(default=False)
+    required_genre = models.CharField(
+        max_length=50, choices=GENRE_CHOICES, null=True, blank=True
+    )  # Genre needed if advertising
+    required_artist_type = models.CharField(
+        max_length=50, choices=ARTIST_TYPES, null=True, blank=True
+    )  # Type of artist needed if advertising
+    applications_open_until = models.DateField(null=True, blank=True)
 
     def increment_num_applications(self):
         self.num_applications += 1
         self.save()
 
     def decrement_num_applications(self):
-        self.num_applications -= 1
+        if self.num_applications > 0:
+            self.num_applications -= 1
+            self.save()
+
+    def save(self, *args, **kwargs):
+        if self.is_advertised and not self.advertised_at:
+            self.advertised_at = timezone.now()
+        super().save(*args, **kwargs)
+
+    def advertise(self):
+        self.is_advertised = True
+        self.advertised_at = timezone.now()
+        self.save()
+
+    def unadvertise(self):
+        self.is_advertised = False
         self.save()
 
     def __str__(self):
         date_str = self.date_of_gig.strftime(
             '%d %b %Y') if self.date_of_gig else ''
-        return f"{self.venue} - {date_str}"
+        return f"{self.venue} - {date_str} - {'Advertised' if self.is_advertised else 'Stored'}"
 
 
 class NewsletterSignup(models.Model):
@@ -253,7 +287,7 @@ class VenueWrittenReview(models.Model):
         return f"{self.venue_name} || {self.artist_name} || {self.date_of_performance}"
 
 
-# Model only for artist listed gig applications
+# Model only for artist gig applications
 class ArtistGigApplication(models.Model):
     artist = models.ForeignKey(Artist, on_delete=models.CASCADE, null=True)
     artist_gig = models.ForeignKey(
@@ -285,11 +319,11 @@ class ArtistGigApplication(models.Model):
         return f"{self.artist} applied for {self.artist_gig}"
 
 
-# Model only for venue listed gig applications
+# Model only for venue gig applications
 class VenueGigApplication(models.Model):
     artist = models.ForeignKey(Artist, on_delete=models.CASCADE, null=True)
     venue_gig = models.ForeignKey(
-        VenueListedGig, on_delete=models.CASCADE, null=True)
+        VenueGig, on_delete=models.CASCADE, null=True)
 
     def save(self, *args, **kwargs):
         if not self.pk:

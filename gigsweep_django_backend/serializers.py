@@ -1,7 +1,8 @@
 from rest_framework import serializers
 from django import forms
-from .models import Artist, Unavailability, Venue, ArtistGig, VenueListedGig, NewsletterSignup, MembershipOptions, ArtistWrittenReview, VenueWrittenReview, ArtistGigApplication, VenueGigApplication, VenueNotification, ArtistNotification, ContactQuery
+from .models import Artist, Unavailability, Venue, ArtistGig, VenueGig, NewsletterSignup, MembershipOptions, ArtistWrittenReview, VenueWrittenReview, ArtistGigApplication, VenueGigApplication, VenueNotification, ArtistNotification, ContactQuery
 from .choices import UK_COUNTY_CHOICES
+from django.utils import timezone
 
 
 class ArtistSerializer(serializers.ModelSerializer):
@@ -77,21 +78,42 @@ class ArtistGigEditSerializer(serializers.ModelSerializer):
         return instance
 
 
-class VenueListedGigCreateSerializer(serializers.ModelSerializer):
+class VenueGigCreateSerializer(serializers.ModelSerializer):
     class Meta:
-        model = VenueListedGig
-        fields = ['id', 'venue', 'date_of_gig', 'country_of_venue',
-                  'genre_of_gig', 'type_of_gig', 'artist_type', 'payment', 'user_type', 'num_applications']
+        model = VenueGig
+        fields = [
+            'id', 'venue', 'date_of_gig', 'time_of_gig', 'duration_of_gig',
+            'country_of_venue', 'genre_of_gig', 'type_of_gig', 'artist_type',
+            'payment', 'user_type', 'num_applications', 'description',
+            'is_advertised', 'artist_needed', 'required_genre',
+            'required_artist_type', 'applications_open_until'
+        ]
 
 
-class VenueListedGigEditSerializer(serializers.ModelSerializer):
+class VenueGigEditSerializer(serializers.ModelSerializer):
     venue_name = serializers.CharField(
         source='venue.venue_name', read_only=True)
 
     class Meta:
-        model = VenueListedGig
-        fields = ['id', 'venue_name', 'date_of_gig', 'country_of_venue',
-                  'genre_of_gig', 'type_of_gig', 'artist_type', 'payment', 'user_type', 'num_applications']
+        model = VenueGig
+        fields = [
+            'id', 'venue_name', 'date_of_gig', 'time_of_gig', 'duration_of_gig',
+            'country_of_venue', 'genre_of_gig', 'type_of_gig', 'artist_type',
+            'payment', 'user_type', 'num_applications', 'description',
+            'is_advertised', 'artist_needed', 'required_genre',
+            'required_artist_type', 'applications_open_until'
+        ]
+        # Fields that should not be editable
+        read_only_fields = ['is_advertised',
+                            'advertised_at', 'num_applications']
+
+    def update(self, instance, validated_data):
+        # Custom logic if necessary when updating an instance
+        if 'is_advertised' in validated_data and validated_data['is_advertised']:
+            # Set the advertised_at field when a gig is advertised
+            instance.advertised_at = timezone.now()
+
+        return super().update(instance, validated_data)
 
 
 class NewsletterSignupSerializer(serializers.ModelSerializer):

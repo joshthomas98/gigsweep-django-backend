@@ -27,12 +27,12 @@ urlpatterns = [
     path('artist_gigs/<int:gig_id>/applications/', views.artist_gig_applications,
          name='artist_gig_applications'),  # Path for getting applications for a specific gig
 
-    path('venue_listed_gigs/', views.venue_listed_gig_list),
-    path('venue_listed_gigs/<int:id>/', views.venue_listed_gig_detail),
+    path('venue_gigs/', views.venue_gig_list),
+    path('venue_gigs/<int:id>/', views.venue_gig_detail),
 
     path('artists/<int:artist_id>/gigs/', views.artist_gigs_by_artist),
-    path('venues/<int:venue_id>/listed_gigs/',
-         views.venue_listed_gigs_by_venue),
+    path('venues/<int:venue_id>/gigs/',
+         views.venue_gigs_by_venue),
 
     path('artist_search/', views.artist_search),
 
