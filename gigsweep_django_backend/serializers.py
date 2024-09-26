@@ -39,7 +39,7 @@ class ArtistGigCreateSerializer(serializers.ModelSerializer):
             'user_type', 'num_applications', 'notes_about_gig', 'reason_for_advertising', 'status', 'is_advertised'
         ]
         # 'is_advertised' is set to read-only to ensure it's not modified during creation
-        read_only_fields = ['is_advertised']
+        # read_only_fields = ['is_advertised']
 
 
 class ArtistGigEditSerializer(serializers.ModelSerializer):
